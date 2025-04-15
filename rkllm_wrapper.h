@@ -5,13 +5,11 @@
 extern "C" {
 #endif
 
-#include <stddef.h> 
+#include <stddef.h>
 
 int rkllm_init_simple(const char* model_path, int max_new_tokens, int max_context_len);
 
-int rkllm_run_simple(const char* prompt, int input_mode, char* output, int output_size);
-
-int rkllm_run_simple_with_fifo(void* input, int input_mode, const char* fifo, char* output, int output_size, size_t token_count);
+int rkllm_run_ex(const void *input, int input_mode, char* output, int output_size, size_t token_count, const char* fifo_path);
 
 void rkllm_destroy_simple();
 
