@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "rkllm_wrapper.h"
 #include "rkllm.h"
 #include <cstring>
