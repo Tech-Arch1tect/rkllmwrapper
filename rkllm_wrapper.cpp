@@ -79,15 +79,25 @@ int rkllm_run_ex(const void *input, int input_mode, char* output, int output_siz
     if (!llmHandle) return -1;
 
     RKLLMInput llmInput;
+    int32_t* cTokens = nullptr;
+
     if (input_mode == RKLLM_INPUT_PROMPT) {
         const char* promptStr = reinterpret_cast<const char*>(input);
         llmInput.input_type = static_cast<RKLLMInputType>(RKLLM_INPUT_PROMPT);
         llmInput.prompt_input = promptStr;
     } else if (input_mode == RKLLM_INPUT_TOKEN) {
+        cTokens = static_cast<int32_t*>(malloc(token_count * sizeof(int32_t)));
+        if (!cTokens) {
+            std::printf("Failed to allocate memory for tokens in C.\n");
+            return -1;
+        }
+
         const int32_t* tokens = reinterpret_cast<const int32_t*>(input);
+        std::memcpy(cTokens, tokens, token_count * sizeof(int32_t));
+
         llmInput.input_type = static_cast<RKLLMInputType>(RKLLM_INPUT_TOKEN);
         RKLLMTokenInput tokenInput;
-        tokenInput.input_ids = const_cast<int32_t*>(tokens);
+        tokenInput.input_ids = cTokens;
         tokenInput.n_tokens = token_count;
         llmInput.token_input = tokenInput;
     } else {
@@ -141,8 +151,14 @@ int rkllm_run_ex(const void *input, int input_mode, char* output, int output_siz
 
     if (data->fifo_fd >= 0) close(data->fifo_fd);
     delete data;
+
+    if (input_mode == RKLLM_INPUT_TOKEN) {
+        free(cTokens);
+    }
+
     return 0;
 }
+
 
 void rkllm_destroy_simple() {
     if (llmHandle) {
