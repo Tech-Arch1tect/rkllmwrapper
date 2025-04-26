@@ -61,16 +61,27 @@ void unifiedCallback(RKLLMResult* result, void* userdata, LLMCallState state) {
     }
 }
 
-int rkllm_init_simple(const char* model_path, int max_new_tokens, int max_context_len) {
+int rkllmwrapper_init(const char* model_path, const RkllmOptions* opts) {
     RKLLMParam param = rkllm_createDefaultParam();
-    param.model_path = model_path;
-    param.is_async = false;
-    param.max_new_tokens = max_new_tokens;
-    param.max_context_len = max_context_len;
+    param.model_path      = model_path;
+    param.is_async        = false;
+    param.max_new_tokens  = opts->max_new_tokens;
+    param.max_context_len = opts->max_context_len;
+
+    if (opts->top_k > 0)          param.top_k       = opts->top_k;
+    if (opts->top_p > 0.0f)       param.top_p       = opts->top_p;
+    if (opts->temperature > 0.0f) param.temperature = opts->temperature;
+
+    if (opts->num_cpus > 0) {
+        int N = opts->num_cpus;
+        uint32_t mask = (N >= 32 ? 0xFFFFFFFFu : ((1u << N) - 1));
+        param.extend_param.enabled_cpus_mask = mask;
+        param.extend_param.enabled_cpus_num  = N;
+    }
 
     int ret = rkllm_init(&llmHandle, &param, unifiedCallback);
     if (ret != 0) {
-        std::printf("rkllm_init failed with error: %d\n", ret);
+        std::printf("rkllmwrapper_init failed with error: %d\n", ret);
     }
     return ret;
 }
@@ -91,10 +102,8 @@ int rkllm_run_ex(const void *input, int input_mode, char* output, int output_siz
             std::printf("Failed to allocate memory for tokens in C.\n");
             return -1;
         }
-
         const int32_t* tokens = reinterpret_cast<const int32_t*>(input);
         std::memcpy(cTokens, tokens, token_count * sizeof(int32_t));
-
         llmInput.input_type = static_cast<RKLLMInputType>(RKLLM_INPUT_TOKEN);
         RKLLMTokenInput tokenInput;
         tokenInput.input_ids = cTokens;
@@ -106,7 +115,7 @@ int rkllm_run_ex(const void *input, int input_mode, char* output, int output_siz
 
     InferenceData* data = new InferenceData();
     data->output = "";
-    data->fifo_path = fifo_path ? fifo_path : "";
+    data->fifo_path = fifo_path ? fifo_path : std::string();
     data->fifo_fd = -1;
 
     if (fifo_path && std::strlen(fifo_path) > 0) {
@@ -158,7 +167,6 @@ int rkllm_run_ex(const void *input, int input_mode, char* output, int output_siz
 
     return 0;
 }
-
 
 void rkllm_destroy_simple() {
     if (llmHandle) {
