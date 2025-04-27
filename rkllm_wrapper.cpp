@@ -76,6 +76,14 @@ int rkllmwrapper_init(const char* model_path, const RkllmOptions* opts) {
     if (opts->top_k       > 0)   param.top_k       = opts->top_k;
     if (opts->top_p       > 0.f) param.top_p       = opts->top_p;
     if (opts->temperature > 0.f) param.temperature = opts->temperature;
+    if (opts->repeat_penalty     > 0.f) param.repeat_penalty   = opts->repeat_penalty;
+    if (opts->frequency_penalty  > 0.f) param.frequency_penalty = opts->frequency_penalty;
+    if (opts->presence_penalty   > 0.f) param.presence_penalty  = opts->presence_penalty;
+    if (opts->mirostat          >= 0)   param.mirostat         = opts->mirostat;
+    if (opts->mirostat_tau       > 0.f) param.mirostat_tau      = opts->mirostat_tau;
+    if (opts->mirostat_eta       > 0.f) param.mirostat_eta      = opts->mirostat_eta;
+    if (opts->n_keep             > 0)   param.n_keep           = opts->n_keep;
+    param.skip_special_token = opts->skip_special_token ? true : false;
 
     if (opts->num_cpus > 0) {
         int N = opts->num_cpus;

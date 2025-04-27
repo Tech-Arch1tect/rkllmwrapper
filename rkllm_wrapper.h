@@ -19,6 +19,14 @@ typedef struct {
     int32_t top_k;
     float   top_p;
     float   temperature;
+    float   repeat_penalty;
+    float   frequency_penalty;
+    float   presence_penalty;
+    int32_t mirostat;
+    float   mirostat_tau;
+    float   mirostat_eta;
+    int32_t n_keep;
+    int     skip_special_token;
     int     num_cpus;
 } RkllmOptions;
 
