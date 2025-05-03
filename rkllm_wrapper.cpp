@@ -26,7 +26,9 @@ struct InferenceData {
 };
 
 static void writeToPersistentFifo(int fd, const char* text) {
-    if (fd < 0) return;
+    if (fd < 0 || text == nullptr || *text == '\0') {
+        return;
+    }
     std::string out(text);
     out.push_back('\n');
     ssize_t written = write(fd, out.c_str(), out.size());
